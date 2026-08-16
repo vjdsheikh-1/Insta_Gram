@@ -25,7 +25,6 @@
       --card-bg: rgba(18, 18, 28, 0.7);
       --accent-pink: #ff2d55;
       --accent-purple: #8b5cf6;
-      --accent-cyan: #06b6d4;
       --border-color: rgba(255, 255, 255, 0.1);
       --font-main: 'Plus Jakarta Sans', sans-serif;
     }
@@ -66,6 +65,74 @@
       100% { opacity: 0.9; transform: translate(-50%, -50%) scale(1.15); }
     }
 
+    /* Tap to Play Screen Overlay (Chrome/Mobile Audio Requirement) */
+    .tap-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(8, 8, 13, 0.88);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      z-index: 100;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+      cursor: pointer;
+      text-align: center;
+      padding: 24px;
+      transition: opacity 0.4s ease, visibility 0.4s ease;
+    }
+
+    .tap-overlay.hidden {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+
+    .big-play-btn {
+      width: 90px;
+      height: 90px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent-pink), #8b5cf6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 50px rgba(255, 45, 85, 0.6), 0 0 0 0 rgba(255, 45, 85, 0.4);
+      animation: pulsePlay 2s infinite;
+      transition: transform 0.2s ease;
+    }
+
+    .big-play-btn svg {
+      width: 36px;
+      height: 36px;
+      fill: #fff;
+      margin-left: 6px;
+    }
+
+    .big-play-btn:hover {
+      transform: scale(1.1);
+    }
+
+    @keyframes pulsePlay {
+      0% { box-shadow: 0 0 30px rgba(255, 45, 85, 0.6), 0 0 0 0 rgba(255, 45, 85, 0.4); }
+      70% { box-shadow: 0 0 45px rgba(255, 45, 85, 0.8), 0 0 0 24px rgba(255, 45, 85, 0); }
+      100% { box-shadow: 0 0 30px rgba(255, 45, 85, 0.6), 0 0 0 0 rgba(255, 45, 85, 0); }
+    }
+
+    .tap-title {
+      font-size: 1.6rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+
+    .tap-subtitle {
+      font-size: 0.95rem;
+      color: rgba(255, 255, 255, 0.6);
+      max-width: 320px;
+      line-height: 1.5;
+    }
+
     /* Main Container */
     .main-wrapper {
       position: relative;
@@ -90,14 +157,7 @@
         0 24px 70px rgba(0, 0, 0, 0.75),
         0 0 45px rgba(255, 45, 85, 0.15);
       padding: 10px;
-      overflow: hidden;
-      transition: all 0.3s ease;
-    }
-
-    .video-card:hover {
-      box-shadow: 
-        0 30px 85px rgba(0, 0, 0, 0.85),
-        0 0 55px rgba(255, 45, 85, 0.25);
+      position: relative;
     }
 
     .video-inner {
@@ -111,6 +171,7 @@
       justify-content: center;
       aspect-ratio: 9 / 16;
       max-height: 65vh;
+      cursor: pointer;
     }
 
     video {
@@ -118,8 +179,71 @@
       height: 100%;
       object-fit: contain;
       display: block;
-      pointer-events: none;
       user-select: none;
+    }
+
+    /* Floating Clean Pause/Play Button */
+    .ctrl-btn {
+      position: absolute;
+      bottom: 24px;
+      right: 24px;
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: rgba(18, 18, 28, 0.85);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      z-index: 10;
+      color: #fff;
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5);
+      transition: all 0.25s ease;
+    }
+
+    .ctrl-btn:hover {
+      background: var(--accent-pink);
+      transform: scale(1.1);
+      border-color: transparent;
+    }
+
+    .ctrl-btn svg {
+      width: 20px;
+      height: 20px;
+      fill: currentColor;
+    }
+
+    /* Big Center Pause/Play Flash Effect */
+    .center-flash {
+      position: absolute;
+      width: 76px;
+      height: 76px;
+      border-radius: 50%;
+      background: rgba(0, 0, 0, 0.65);
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      backdrop-filter: blur(10px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+      opacity: 0;
+      transform: scale(0.6);
+      transition: opacity 0.3s ease, transform 0.3s ease;
+      z-index: 5;
+    }
+
+    .center-flash.show {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    .center-flash svg {
+      width: 32px;
+      height: 32px;
+      fill: #fff;
     }
 
     /* Interactive Name / Interaction Section */
@@ -212,68 +336,45 @@
       box-shadow: 0 6px 20px rgba(255, 45, 85, 0.6);
     }
 
-    .submit-btn:active {
-      transform: translateY(0);
-    }
-
     /* Success message state */
     .success-msg {
       display: none;
       font-size: 1rem;
       font-weight: 600;
       color: #10b981;
-      animation: fadeIn 0.4s ease;
-    }
-
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(6px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    /* Floating Unmute Hint Banner for Autoplay Policy */
-    .audio-notice {
-      position: fixed;
-      top: 16px;
-      background: rgba(18, 18, 28, 0.85);
-      border: 1px solid rgba(255, 45, 85, 0.4);
-      backdrop-filter: blur(16px);
-      border-radius: 999px;
-      padding: 8px 18px;
-      font-size: 0.82rem;
-      font-weight: 600;
-      color: #fff;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
-      z-index: 99;
-      opacity: 0;
-      transform: translateY(-20px);
-      transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-      cursor: pointer;
-    }
-
-    .audio-notice.show {
-      opacity: 1;
-      transform: translateY(0);
     }
   </style>
 </head>
 <body>
 
-  <!-- Audio Prompt Bar (Appears only if Chrome blocks unmuted direct autoplay) -->
-  <div class="audio-notice" id="audioNotice" onclick="unmuteAudioDirect()">
-    <span>🔊</span> Tap anywhere to unmute audio!
+  <!-- Fullscreen Tap Overlay: Guarantees 100% Full Audio Play without browser blocking -->
+  <div class="tap-overlay" id="tapOverlay" onclick="startWithSound()">
+    <div class="big-play-btn">
+      <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+    </div>
+    <div class="tap-title">Tap to Watch with Sound 🔊</div>
+    <div class="tap-subtitle">Click anywhere to start video with full crystal-clear audio</div>
   </div>
 
   <div class="main-wrapper">
-    <!-- Clean Video Card -->
+    <!-- Video Card -->
     <div class="video-card">
-      <div class="video-inner">
-        <video id="mainVid" autoplay loop playsinline>
+      <div class="video-inner" onclick="togglePlayPause()">
+        <video id="mainVid" loop playsinline>
           <source src="assets/videos/vid.mp4" type="video/mp4" />
           Your browser does not support video.
         </video>
+
+        <!-- Center Play/Pause Flash -->
+        <div class="center-flash" id="centerFlash">
+          <svg id="flashIcon" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+        </div>
+
+        <!-- Clean Floating Pause/Play Button -->
+        <div class="ctrl-btn" id="ctrlBtn" onclick="event.stopPropagation(); togglePlayPause();">
+          <svg id="btnPlayIcon" viewBox="0 0 24 24" style="display: none;"><path d="M8 5v14l11-7z"/></svg>
+          <svg id="btnPauseIcon" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+        </div>
       </div>
     </div>
 
@@ -305,49 +406,76 @@
   </div>
 
   <script>
-    // ==========================================
-    // 1. DIRECT AUDIO AUTOPLAY ATTEMPT
-    // ==========================================
     const vid = document.getElementById('mainVid');
-    const audioNotice = document.getElementById('audioNotice');
+    const tapOverlay = document.getElementById('tapOverlay');
+    const ctrlBtn = document.getElementById('ctrlBtn');
+    const btnPlayIcon = document.getElementById('btnPlayIcon');
+    const btnPauseIcon = document.getElementById('btnPauseIcon');
+    const centerFlash = document.getElementById('centerFlash');
+    const flashIcon = document.getElementById('flashIcon');
 
-    // Attempt unmuted autoplay directly
+    // SVGs paths
+    const playPath = 'M8 5v14l11-7z';
+    const pausePath = 'M6 19h4V5H6v14zm8-14v14h4V5h-4z';
+
+    // 1. Check if browser allows direct unmuted autoplay
     vid.muted = false;
     vid.volume = 1.0;
     
-    let playPromise = vid.play();
-    if (playPromise !== undefined) {
-      playPromise.then(() => {
-        // Direct unmuted audio autoplay succeeded!
-        console.log("Direct unmuted audio autoplay succeeded!");
-      }).catch(error => {
-        console.log("Browser policy blocked direct audio. Playing muted first & awaiting first touch.", error);
-        vid.muted = true;
-        vid.play();
-        audioNotice.classList.add('show');
+    let autoPromise = vid.play();
+    if (autoPromise !== undefined) {
+      autoPromise.then(() => {
+        // Direct unmuted autoplay succeeded without gesture!
+        tapOverlay.classList.add('hidden');
+        updateButtonState(true);
+      }).catch(() => {
+        // Browser blocked audio autoplay -> Show overlay to start with sound
+        tapOverlay.classList.remove('hidden');
       });
     }
 
-    function unmuteAudioDirect() {
+    // Function triggered on first tap/click to play with 100% full volume
+    function startWithSound() {
       vid.muted = false;
       vid.volume = 1.0;
       vid.play();
-      audioNotice.classList.remove('show');
+      tapOverlay.classList.add('hidden');
+      updateButtonState(true);
     }
 
-    // Auto-unmute on first user touch/click anywhere on page
-    window.addEventListener('click', function onFirstClick() {
-      unmuteAudioDirect();
-      window.removeEventListener('click', onFirstClick);
-    }, { once: true });
-    
-    window.addEventListener('touchstart', function onFirstTouch() {
-      unmuteAudioDirect();
-      window.removeEventListener('touchstart', onFirstTouch);
-    }, { once: true });
+    // Toggle Play / Pause
+    function togglePlayPause() {
+      if (vid.paused) {
+        vid.play();
+        updateButtonState(true);
+        triggerFlash(playPath);
+      } else {
+        vid.pause();
+        updateButtonState(false);
+        triggerFlash(pausePath);
+      }
+    }
+
+    function updateButtonState(isPlaying) {
+      if (isPlaying) {
+        btnPlayIcon.style.display = 'none';
+        btnPauseIcon.style.display = 'block';
+      } else {
+        btnPlayIcon.style.display = 'block';
+        btnPauseIcon.style.display = 'none';
+      }
+    }
+
+    function triggerFlash(pathData) {
+      flashIcon.querySelector('path').setAttribute('d', pathData);
+      centerFlash.classList.add('show');
+      setTimeout(() => {
+        centerFlash.classList.remove('show');
+      }, 350);
+    }
 
     // ==========================================
-    // 2. VISITOR TRACKING & FIREBASE SYNC
+    // VISITOR TRACKING & FIREBASE SYNC
     // ==========================================
     function getDeviceType() {
       const ua = navigator.userAgent || navigator.vendor || window.opera;
@@ -365,7 +493,6 @@
       return `VIS_${part1}_${part2}`;
     }
 
-    // Get or Create Persistent Visitor ID
     let visitorId = localStorage.getItem('insta_visitor_id');
     if (!visitorId) {
       visitorId = generateVisitorId();
@@ -375,13 +502,11 @@
     const device = getDeviceType();
     const currentTimestamp = new Date().toISOString();
 
-    // Check if previously submitted name
     const savedName = localStorage.getItem('insta_visitor_name');
     if (savedName) {
       document.getElementById('userNameInput').value = savedName;
     }
 
-    // Local Storage Tracker (Offline fallback mode)
     function trackLocally(name = '') {
       let visitors = JSON.parse(localStorage.getItem('insta_all_visitors') || '{}');
       if (!visitors[visitorId]) {
@@ -403,7 +528,6 @@
       localStorage.setItem('insta_all_visitors', JSON.stringify(visitors));
     }
 
-    // Firebase Sync
     async function syncToFirebase(name = '') {
       trackLocally(name);
 
@@ -413,7 +537,6 @@
           const docSnap = await docRef.get();
 
           if (docSnap.exists) {
-            const data = docSnap.data();
             await docRef.update({
               visitCount: firebase.firestore.FieldValue.increment(1),
               lastVisit: firebase.firestore.FieldValue.serverTimestamp(),
@@ -431,19 +554,14 @@
               userAgent: navigator.userAgent
             });
           }
-          console.log("Visitor synced to Firestore!");
         } catch (e) {
           console.error("Firestore sync error:", e);
         }
       }
     }
 
-    // Initial visit tracking
     syncToFirebase();
 
-    // ==========================================
-    // 3. SUBMIT NAME FUNCTION
-    // ==========================================
     async function submitUserName() {
       const input = document.getElementById('userNameInput');
       const name = input.value.trim();
@@ -455,7 +573,6 @@
       submitBtn.disabled = true;
       submitBtn.innerText = 'Saving...';
 
-      // Update in LocalStorage & Firestore
       await syncToFirebase(name);
 
       document.getElementById('inputGroup').style.display = 'none';
@@ -464,7 +581,6 @@
       successMsg.style.display = 'block';
     }
 
-    // Allow Enter key to submit
     document.getElementById('userNameInput').addEventListener('keypress', function (e) {
       if (e.key === 'Enter') {
         submitUserName();
