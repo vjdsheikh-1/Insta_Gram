@@ -65,74 +65,6 @@
       100% { opacity: 0.9; transform: translate(-50%, -50%) scale(1.15); }
     }
 
-    /* Tap to Play Screen Overlay (Chrome/Mobile Audio Requirement) */
-    .tap-overlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(8, 8, 13, 0.88);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      z-index: 100;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 20px;
-      cursor: pointer;
-      text-align: center;
-      padding: 24px;
-      transition: opacity 0.4s ease, visibility 0.4s ease;
-    }
-
-    .tap-overlay.hidden {
-      opacity: 0;
-      visibility: hidden;
-      pointer-events: none;
-    }
-
-    .big-play-btn {
-      width: 90px;
-      height: 90px;
-      border-radius: 50%;
-      background: linear-gradient(135deg, var(--accent-pink), #8b5cf6);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      box-shadow: 0 0 50px rgba(255, 45, 85, 0.6), 0 0 0 0 rgba(255, 45, 85, 0.4);
-      animation: pulsePlay 2s infinite;
-      transition: transform 0.2s ease;
-    }
-
-    .big-play-btn svg {
-      width: 36px;
-      height: 36px;
-      fill: #fff;
-      margin-left: 6px;
-    }
-
-    .big-play-btn:hover {
-      transform: scale(1.1);
-    }
-
-    @keyframes pulsePlay {
-      0% { box-shadow: 0 0 30px rgba(255, 45, 85, 0.6), 0 0 0 0 rgba(255, 45, 85, 0.4); }
-      70% { box-shadow: 0 0 45px rgba(255, 45, 85, 0.8), 0 0 0 24px rgba(255, 45, 85, 0); }
-      100% { box-shadow: 0 0 30px rgba(255, 45, 85, 0.6), 0 0 0 0 rgba(255, 45, 85, 0); }
-    }
-
-    .tap-title {
-      font-size: 1.6rem;
-      font-weight: 800;
-      letter-spacing: -0.02em;
-    }
-
-    .tap-subtitle {
-      font-size: 0.95rem;
-      color: rgba(255, 255, 255, 0.6);
-      max-width: 320px;
-      line-height: 1.5;
-    }
-
     /* Main Container */
     .main-wrapper {
       position: relative;
@@ -347,20 +279,11 @@
 </head>
 <body>
 
-  <!-- Fullscreen Tap Overlay: Guarantees 100% Full Audio Play without browser blocking -->
-  <div class="tap-overlay" id="tapOverlay" onclick="startWithSound()">
-    <div class="big-play-btn">
-      <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
-    </div>
-    <div class="tap-title">Tap to Watch with Sound 🔊</div>
-    <div class="tap-subtitle">Click anywhere to start video with full crystal-clear audio</div>
-  </div>
-
   <div class="main-wrapper">
     <!-- Video Card -->
     <div class="video-card">
       <div class="video-inner" onclick="togglePlayPause()">
-        <video id="mainVid" loop playsinline>
+        <video id="mainVid" autoplay loop playsinline>
           <source src="assets/videos/vid.mp4" type="video/mp4" />
           Your browser does not support video.
         </video>
@@ -407,45 +330,56 @@
 
   <script>
     const vid = document.getElementById('mainVid');
-    const tapOverlay = document.getElementById('tapOverlay');
     const ctrlBtn = document.getElementById('ctrlBtn');
     const btnPlayIcon = document.getElementById('btnPlayIcon');
     const btnPauseIcon = document.getElementById('btnPauseIcon');
     const centerFlash = document.getElementById('centerFlash');
     const flashIcon = document.getElementById('flashIcon');
 
-    // SVGs paths
     const playPath = 'M8 5v14l11-7z';
     const pausePath = 'M6 19h4V5H6v14zm8-14v14h4V5h-4z';
 
-    // 1. Check if browser allows direct unmuted autoplay
+    // 1. Direct Unmuted Audio Play on Load
     vid.muted = false;
     vid.volume = 1.0;
-    
-    let autoPromise = vid.play();
-    if (autoPromise !== undefined) {
-      autoPromise.then(() => {
-        // Direct unmuted autoplay succeeded without gesture!
-        tapOverlay.classList.add('hidden');
-        updateButtonState(true);
-      }).catch(() => {
-        // Browser blocked audio autoplay -> Show overlay to start with sound
-        tapOverlay.classList.remove('hidden');
-      });
+
+    function playDirect() {
+      vid.muted = false;
+      const playPromise = vid.play();
+      if (playPromise !== undefined) {
+        playPromise.then(() => {
+          updateButtonState(true);
+        }).catch(err => {
+          // If browser policy blocks sound before any interaction, play muted and immediately unmute on first gesture anywhere
+          console.warn("Direct sound autoplay blocked by browser policy; auto-unmuting on first touch.", err);
+          vid.muted = true;
+          vid.play();
+          updateButtonState(true);
+
+          const autoUnmute = () => {
+            vid.muted = false;
+            vid.volume = 1.0;
+            vid.play();
+            window.removeEventListener('click', autoUnmute);
+            window.removeEventListener('touchstart', autoUnmute);
+            window.removeEventListener('scroll', autoUnmute);
+            window.removeEventListener('keydown', autoUnmute);
+          };
+
+          window.addEventListener('click', autoUnmute, { once: true });
+          window.addEventListener('touchstart', autoUnmute, { once: true });
+          window.addEventListener('scroll', autoUnmute, { once: true });
+          window.addEventListener('keydown', autoUnmute, { once: true });
+        });
+      }
     }
 
-    // Function triggered on first tap/click to play with 100% full volume
-    function startWithSound() {
-      vid.muted = false;
-      vid.volume = 1.0;
-      vid.play();
-      tapOverlay.classList.add('hidden');
-      updateButtonState(true);
-    }
+    playDirect();
 
     // Toggle Play / Pause
     function togglePlayPause() {
       if (vid.paused) {
+        vid.muted = false;
         vid.play();
         updateButtonState(true);
         triggerFlash(playPath);
