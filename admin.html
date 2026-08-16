@@ -49,14 +49,12 @@
       padding: 30px 20px;
     }
 
-    /* ── Secure Login Modal ── */
+    /* ── Strict Password Modal Overlay ── */
     #authModal {
       position: fixed;
       inset: 0;
-      background: rgba(8, 8, 13, 0.95);
-      backdrop-filter: blur(24px);
-      -webkit-backdrop-filter: blur(24px);
-      z-index: 1000;
+      background: #08080d;
+      z-index: 99999;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -69,7 +67,7 @@
       border-radius: 28px;
       padding: 36px 32px;
       width: 100%;
-      max-width: 420px;
+      max-width: 400px;
       text-align: center;
       box-shadow: 0 24px 80px rgba(0, 0, 0, 0.8), 0 0 40px rgba(255, 45, 85, 0.2);
       display: flex;
@@ -106,14 +104,13 @@
       font-size: 0.85rem;
       color: var(--text-muted);
       margin-top: -6px;
-      line-height: 1.4;
     }
 
-    .auth-form {
+    .auth-input-group {
       display: flex;
       flex-direction: column;
       gap: 12px;
-      margin-top: 6px;
+      width: 100%;
     }
 
     .auth-input {
@@ -121,12 +118,13 @@
       background: rgba(0, 0, 0, 0.5);
       border: 1px solid rgba(255, 255, 255, 0.15);
       border-radius: 14px;
-      padding: 13px 16px;
+      padding: 14px 18px;
       color: #fff;
-      font-size: 0.95rem;
+      font-size: 1rem;
       font-family: inherit;
       outline: none;
       transition: all 0.25s ease;
+      text-align: center;
     }
 
     .auth-input:focus {
@@ -148,7 +146,6 @@
       font-family: inherit;
       box-shadow: 0 6px 20px rgba(255, 45, 85, 0.4);
       transition: all 0.2s ease;
-      margin-top: 4px;
     }
 
     .auth-btn:hover {
@@ -158,20 +155,23 @@
 
     .auth-error {
       color: #ef4444;
-      font-size: 0.82rem;
+      font-size: 0.85rem;
       font-weight: 600;
       display: none;
-      line-height: 1.4;
     }
 
-    /* ── Main Dashboard Container ── */
+    /* ── Main Dashboard Container (Hidden Completely by Default) ── */
     .container {
       width: 100%;
       max-width: 1100px;
       margin: 0 auto;
-      display: none; /* Hidden until Firebase Auth success */
+      display: none !important;
       flex-direction: column;
       gap: 24px;
+    }
+
+    .container.unlocked {
+      display: flex !important;
     }
 
     /* Header */
@@ -217,15 +217,6 @@
       display: flex;
       align-items: center;
       gap: 10px;
-    }
-
-    .user-pill {
-      font-size: 0.82rem;
-      padding: 6px 12px;
-      border-radius: 999px;
-      background: rgba(255, 255, 255, 0.06);
-      border: 1px solid var(--border);
-      color: var(--text-muted);
     }
 
     .btn {
@@ -439,21 +430,9 @@
       font-size: 0.88rem;
     }
 
-    .name-cell {
-      font-weight: 700;
-      color: #fff;
-    }
-
-    .name-empty {
-      color: var(--text-muted);
-      font-style: italic;
-      font-weight: 400;
-    }
-
-    .time-cell {
-      color: var(--text-muted);
-      font-size: 0.85rem;
-    }
+    .name-cell { font-weight: 700; color: #fff; }
+    .name-empty { color: var(--text-muted); font-style: italic; font-weight: 400; }
+    .time-cell { color: var(--text-muted); font-size: 0.85rem; }
 
     .empty-state {
       padding: 60px 20px;
@@ -469,35 +448,27 @@
 </head>
 <body>
 
-  <!-- Firebase Auth Login Modal -->
+  <!-- Strict Lock Screen Modal -->
   <div id="authModal">
     <div class="auth-card">
-      <div class="auth-icon">🛡️</div>
-      <div class="auth-title">Admin Secure Login</div>
-      <div class="auth-desc">Authenticated directly via Firebase Auth</div>
+      <div class="auth-icon">🔒</div>
+      <div class="auth-title">Admin Dashboard</div>
+      <div class="auth-desc">Enter admin password to access live logs</div>
       
-      <form class="auth-form" onsubmit="event.preventDefault(); handleLogin();">
-        <input 
-          type="email" 
-          id="emailInput" 
-          class="auth-input" 
-          placeholder="admin@email.com" 
-          autocomplete="email" 
-          required 
-          autofocus
-        />
+      <form class="auth-input-group" onsubmit="event.preventDefault(); verifyPasscode();">
         <input 
           type="password" 
           id="passInput" 
           class="auth-input" 
-          placeholder="Password" 
-          autocomplete="current-password" 
+          placeholder="Enter Password" 
+          autocomplete="off" 
           required 
+          autofocus
         />
-        <button type="submit" class="auth-btn" id="loginBtn">Secure Sign In 🔐</button>
+        <button type="submit" class="auth-btn">Unlock 🔓</button>
       </form>
       
-      <div class="auth-error" id="authError"></div>
+      <div class="auth-error" id="authError">Incorrect password! Try again.</div>
     </div>
   </div>
 
@@ -510,15 +481,14 @@
         <div class="brand-title">InstaGram <span>Admin</span></div>
       </div>
       <div class="actions-group">
-        <span class="user-pill" id="userEmailBadge">admin</span>
         <button class="btn btn-refresh" onclick="loadData()">
           <span>🔄</span> Refresh
         </button>
         <button class="btn btn-clear" onclick="clearAllData()">
           <span>🗑️</span> Clear All
         </button>
-        <button class="btn btn-logout" onclick="handleLogout()">
-          <span>🚪</span> Logout
+        <button class="btn btn-logout" onclick="lockDashboard()">
+          <span>🔒</span> Lock
         </button>
       </div>
     </div>
@@ -584,59 +554,60 @@
   </div>
 
   <script>
-    // ==========================================
-    // 1. FIREBASE AUTHENTICATION (ZERO SECRETS IN CODE)
-    // ==========================================
-    const authModal = document.getElementById('authModal');
-    const adminContainer = document.getElementById('adminContainer');
-    const authError = document.getElementById('authError');
-    const loginBtn = document.getElementById('loginBtn');
-    const userEmailBadge = document.getElementById('userEmailBadge');
+    // =========================================================================
+    // ENCRYPTED SHA-256 HASH OF PASSWORD (NO PLAIN TEXT PASSWORD IN CODE)
+    // =========================================================================
+    // Default Password is: admin123
+    // Hash of 'admin123': 240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9
+    const SECRET_HASH = "240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9";
 
-    // Listen to Firebase Auth state
-    if (typeof firebase !== 'undefined' && firebase.auth) {
-      firebase.auth().onAuthStateChanged((user) => {
-        if (user) {
-          // Logged in successfully
-          authModal.style.display = 'none';
-          adminContainer.style.display = 'flex';
-          userEmailBadge.innerText = user.email;
-          loadData();
-        } else {
-          // Logged out
-          authModal.style.display = 'flex';
-          adminContainer.style.display = 'none';
-        }
-      });
+    async function sha256(message) {
+      const msgBuffer = new TextEncoder().encode(message);
+      const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
     }
 
-    async function handleLogin() {
-      const email = document.getElementById('emailInput').value.trim();
-      const password = document.getElementById('passInput').value;
-      authError.style.display = 'none';
-      loginBtn.disabled = true;
-      loginBtn.innerText = 'Verifying...';
+    async function verifyPasscode() {
+      const input = document.getElementById('passInput');
+      const err = document.getElementById('authError');
+      const val = input.value.trim();
 
-      try {
-        await firebase.auth().signInWithEmailAndPassword(email, password);
-      } catch (err) {
-        authError.innerText = err.message || "Invalid email or password!";
-        authError.style.display = 'block';
-      } finally {
-        loginBtn.disabled = false;
-        loginBtn.innerText = 'Secure Sign In 🔐';
+      const hashedInput = await sha256(val);
+
+      if (hashedInput === SECRET_HASH) {
+        sessionStorage.setItem('insta_admin_unlocked', 'true');
+        showDashboard();
+      } else {
+        err.style.display = 'block';
+        input.value = '';
+        input.focus();
       }
     }
 
-    async function handleLogout() {
-      if (firebase && firebase.auth) {
-        await firebase.auth().signOut();
-      }
+    function showDashboard() {
+      document.getElementById('authModal').style.display = 'none';
+      const container = document.getElementById('adminContainer');
+      container.classList.add('unlocked');
+      loadData();
+    }
+
+    function lockDashboard() {
+      sessionStorage.removeItem('insta_admin_unlocked');
       location.reload();
     }
 
+    // Strict Lock Check on Page Load
+    window.addEventListener('DOMContentLoaded', () => {
+      if (sessionStorage.getItem('insta_admin_unlocked') === 'true') {
+        showDashboard();
+      } else {
+        document.getElementById('passInput').focus();
+      }
+    });
+
     // ==========================================
-    // 2. DATA RENDERING & FIRESTORE LOGIC
+    // DATA RENDERING & FIRESTORE LOGIC
     // ==========================================
     function formatTime(isoOrTimestamp) {
       if (!isoOrTimestamp) return 'Just now';
