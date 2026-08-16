@@ -1,24 +1,21 @@
-﻿// Firebase Configuration
-// Replace these with your Firebase project credentials from Firebase Console:
-// (Go to Firebase Console -> Project Settings -> General -> Your apps -> Web app)
+﻿// Your web app Firebase configuration
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_PROJECT_ID.appspot.com",
-  messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-  appId: "YOUR_APP_ID"
+  apiKey: "AIzaSyAO2G7FFD4ECA9_43jjXscd0oQjmuv67cI",
+  authDomain: "funn-93972.firebaseapp.com",
+  projectId: "funn-93972",
+  storageBucket: "funn-93972.firebasestorage.app",
+  messagingSenderId: "229499142421",
+  appId: "1:229499142421:web:17d3dccd7bfe250db1291c",
+  measurementId: "G-RH0LVBHKFP"
 };
 
-// Check if Firebase is initialized
+// Initialize Firebase
 let db = null;
 try {
-  if (firebaseConfig.projectId !== "YOUR_PROJECT_ID") {
+  if (typeof firebase !== 'undefined') {
     firebase.initializeApp(firebaseConfig);
     db = firebase.firestore();
-    console.log("Firebase initialized successfully!");
-  } else {
-    console.warn("Firebase config has default placeholder values. Using LocalStorage fallback mode.");
+    console.log("Firebase Firestore connected successfully to funn-93972!");
   }
 } catch (e) {
   console.error("Firebase init error:", e);
