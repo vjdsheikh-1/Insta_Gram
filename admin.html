@@ -42,13 +42,131 @@
       color: var(--text);
       font-family: var(--font);
       min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
       padding: 30px 20px;
     }
 
+    /* ── Password Modal Overlay ── */
+    #authModal {
+      position: fixed;
+      inset: 0;
+      background: rgba(8, 8, 13, 0.94);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .auth-card {
+      background: rgba(22, 22, 34, 0.95);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 28px;
+      padding: 36px 32px;
+      width: 100%;
+      max-width: 400px;
+      text-align: center;
+      box-shadow: 0 24px 80px rgba(0, 0, 0, 0.8), 0 0 40px rgba(255, 45, 85, 0.2);
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      animation: modalPop 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+
+    @keyframes modalPop {
+      from { transform: scale(0.9); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+
+    .auth-icon {
+      width: 60px;
+      height: 60px;
+      border-radius: 20px;
+      background: linear-gradient(135deg, var(--accent-pink), #8b5cf6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.8rem;
+      margin: 0 auto;
+      box-shadow: 0 8px 24px rgba(255, 45, 85, 0.4);
+    }
+
+    .auth-title {
+      font-size: 1.4rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+
+    .auth-desc {
+      font-size: 0.88rem;
+      color: var(--text-muted);
+      margin-top: -6px;
+    }
+
+    .auth-input-group {
+      position: relative;
+      width: 100%;
+    }
+
+    .auth-input {
+      width: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 14px;
+      padding: 14px 18px;
+      color: #fff;
+      font-size: 1rem;
+      font-family: var(--mono);
+      letter-spacing: 0.15em;
+      text-align: center;
+      outline: none;
+      transition: all 0.25s ease;
+    }
+
+    .auth-input:focus {
+      border-color: var(--accent-pink);
+      box-shadow: 0 0 20px rgba(255, 45, 85, 0.35);
+      background: rgba(0, 0, 0, 0.7);
+    }
+
+    .auth-btn {
+      width: 100%;
+      background: linear-gradient(135deg, var(--accent-pink) 0%, #8b5cf6 100%);
+      color: #fff;
+      border: none;
+      border-radius: 14px;
+      padding: 14px;
+      font-weight: 700;
+      font-size: 1rem;
+      cursor: pointer;
+      font-family: inherit;
+      box-shadow: 0 6px 20px rgba(255, 45, 85, 0.4);
+      transition: all 0.2s ease;
+    }
+
+    .auth-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(255, 45, 85, 0.6);
+    }
+
+    .auth-error {
+      color: #ef4444;
+      font-size: 0.85rem;
+      font-weight: 600;
+      display: none;
+    }
+
+    /* ── Main Dashboard Container ── */
     .container {
+      width: 100%;
       max-width: 1100px;
       margin: 0 auto;
-      display: flex;
+      display: none; /* Hidden until unlocked */
       flex-direction: column;
       gap: 24px;
     }
@@ -95,16 +213,16 @@
     .actions-group {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 10px;
     }
 
     .btn {
       display: inline-flex;
       align-items: center;
       gap: 8px;
-      padding: 10px 18px;
+      padding: 10px 16px;
       border-radius: 12px;
-      font-size: 0.9rem;
+      font-size: 0.88rem;
       font-weight: 600;
       cursor: pointer;
       border: 1px solid transparent;
@@ -130,6 +248,16 @@
       background: #ef4444;
       color: #fff;
       box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);
+    }
+
+    .btn-logout {
+      background: rgba(255, 255, 255, 0.04);
+      color: var(--text-muted);
+      border-color: var(--border);
+    }
+    .btn-logout:hover {
+      background: rgba(255, 255, 255, 0.08);
+      color: #fff;
     }
 
     /* Stats Grid */
@@ -274,14 +402,12 @@
       letter-spacing: 0.02em;
     }
 
-    /* Dynamic Colors for IDs */
     .vis-c0 { background: rgba(255, 45, 85, 0.15); color: #ff6b8b; border: 1px solid rgba(255, 45, 85, 0.3); }
     .vis-c1 { background: rgba(6, 182, 212, 0.15); color: #38bdf8; border: 1px solid rgba(6, 182, 212, 0.3); }
     .vis-c2 { background: rgba(139, 92, 246, 0.15); color: #a78bfa; border: 1px solid rgba(139, 92, 246, 0.3); }
     .vis-c3 { background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); }
     .vis-c4 { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); }
 
-    /* Device Badge */
     .device-badge {
       display: inline-flex;
       align-items: center;
@@ -294,7 +420,6 @@
       border: 1px solid rgba(255, 255, 255, 0.08);
     }
 
-    /* Visits Badge */
     .visit-count-pill {
       display: inline-flex;
       align-items: center;
@@ -325,7 +450,6 @@
       font-size: 0.85rem;
     }
 
-    /* Empty State */
     .empty-state {
       padding: 60px 20px;
       text-align: center;
@@ -340,7 +464,32 @@
 </head>
 <body>
 
-  <div class="container">
+  <!-- Password Security Modal -->
+  <div id="authModal">
+    <div class="auth-card">
+      <div class="auth-icon">🔒</div>
+      <div class="auth-title">Admin Access</div>
+      <div class="auth-desc">Enter admin passcode to view visitor logs</div>
+      
+      <div class="auth-input-group">
+        <input 
+          type="password" 
+          id="passInput" 
+          class="auth-input" 
+          placeholder="••••••••" 
+          autocomplete="off" 
+          maxlength="30"
+          autofocus
+        />
+      </div>
+      
+      <button class="auth-btn" onclick="checkPassword()">Unlock Dashboard 🔓</button>
+      <div class="auth-error" id="authError">Incorrect passcode. Try again!</div>
+    </div>
+  </div>
+
+  <!-- Protected Dashboard Container -->
+  <div class="container" id="adminContainer">
     <!-- Header -->
     <div class="header-bar">
       <div class="brand">
@@ -353,6 +502,9 @@
         </button>
         <button class="btn btn-clear" onclick="clearAllData()">
           <span>🗑️</span> Clear All
+        </button>
+        <button class="btn btn-logout" onclick="logoutAdmin()">
+          <span>🔒</span> Lock
         </button>
       </div>
     </div>
@@ -418,7 +570,54 @@
   </div>
 
   <script>
-    // Format timestamp nicely
+    // ==========================================
+    // PASSWORD SECURITY SYSTEM
+    // ==========================================
+    // Default passcode is: admin123 (Change anytime below or in session)
+    const ADMIN_PASS = "admin123";
+
+    function checkPassword() {
+      const input = document.getElementById('passInput');
+      const err = document.getElementById('authError');
+      const entered = input.value.trim();
+
+      if (entered === ADMIN_PASS) {
+        sessionStorage.setItem('insta_admin_auth', 'true');
+        unlockUI();
+      } else {
+        err.style.display = 'block';
+        input.value = '';
+        input.focus();
+      }
+    }
+
+    function unlockUI() {
+      document.getElementById('authModal').style.display = 'none';
+      document.getElementById('adminContainer').style.display = 'flex';
+      loadData();
+    }
+
+    function logoutAdmin() {
+      sessionStorage.removeItem('insta_admin_auth');
+      location.reload();
+    }
+
+    // Check if already authenticated in this session
+    window.addEventListener('DOMContentLoaded', () => {
+      if (sessionStorage.getItem('insta_admin_auth') === 'true') {
+        unlockUI();
+      } else {
+        document.getElementById('passInput').focus();
+      }
+    });
+
+    document.getElementById('passInput').addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') checkPassword();
+    });
+
+    // ==========================================
+    // DATA RENDERING & FIREBASE LOGIC
+    // ==========================================
     function formatTime(isoOrTimestamp) {
       if (!isoOrTimestamp) return 'Just now';
       let d;
@@ -430,7 +629,6 @@
       return d.toLocaleDateString() + ' ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
     }
 
-    // Color picker for Visitor ID
     function getVisitorColorClass(idStr) {
       let hash = 0;
       for (let i = 0; i < idStr.length; i++) {
@@ -440,7 +638,6 @@
       return `vis-c${idx}`;
     }
 
-    // Device icon mapper
     function getDeviceBadge(device) {
       if (!device) return '<span class="device-badge">💻 Unknown</span>';
       const d = device.toLowerCase();
@@ -451,7 +648,6 @@
       return `<span class="device-badge">🖥️ ${device}</span>`;
     }
 
-    // Render table rows & stats
     function renderVisitorList(list) {
       const tbody = document.getElementById('visitorTableBody');
       const empty = document.getElementById('emptyState');
@@ -468,12 +664,10 @@
 
       empty.style.display = 'none';
 
-      // Calculate stats
       const uniqueCount = list.length;
       let totalVisits = 0;
       let namesCount = 0;
 
-      // Sort by last active descending
       list.sort((a, b) => {
         const timeA = a.lastVisit?.seconds ? a.lastVisit.seconds * 1000 : new Date(a.lastVisit || 0).getTime();
         const timeB = b.lastVisit?.seconds ? b.lastVisit.seconds * 1000 : new Date(b.lastVisit || 0).getTime();
@@ -509,7 +703,6 @@
       return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
     }
 
-    // Load Data (Firebase real-time listener if configured, otherwise localstorage)
     function loadData() {
       if (typeof db !== 'undefined' && db !== null) {
         document.getElementById('sourceText').innerText = 'Firestore Live';
@@ -536,17 +729,14 @@
       renderVisitorList(list);
     }
 
-    // Clear All Function
     async function clearAllData() {
       if (!confirm("Are you sure you want to clear all visitor data and responses?")) {
         return;
       }
 
-      // Clear LocalStorage
       localStorage.removeItem('insta_all_visitors');
       localStorage.removeItem('insta_visitor_name');
 
-      // Clear Firestore Collection
       if (typeof db !== 'undefined' && db !== null) {
         try {
           const snapshot = await db.collection('visitors').get();
@@ -564,9 +754,6 @@
       renderVisitorList([]);
       alert("All visitor tracking data cleared successfully!");
     }
-
-    // Initial Load
-    window.addEventListener('DOMContentLoaded', loadData);
   </script>
 </body>
 </html>
