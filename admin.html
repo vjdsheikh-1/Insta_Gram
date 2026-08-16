@@ -8,8 +8,9 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet" />
 
-  <!-- Firebase SDKs -->
+  <!-- Firebase SDKs (App, Auth & Firestore) -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
   <script src="firebase-config.js"></script>
 
@@ -27,7 +28,6 @@
       --accent-pink: #ff2d55;
       --accent-cyan: #06b6d4;
       --accent-green: #10b981;
-      --accent-orange: #f59e0b;
       --text: #f1f5f9;
       --text-muted: #94a3b8;
       --font: 'Plus Jakarta Sans', sans-serif;
@@ -49,11 +49,11 @@
       padding: 30px 20px;
     }
 
-    /* ── Password Modal Overlay ── */
+    /* ── Secure Login Modal ── */
     #authModal {
       position: fixed;
       inset: 0;
-      background: rgba(8, 8, 13, 0.94);
+      background: rgba(8, 8, 13, 0.95);
       backdrop-filter: blur(24px);
       -webkit-backdrop-filter: blur(24px);
       z-index: 1000;
@@ -69,12 +69,12 @@
       border-radius: 28px;
       padding: 36px 32px;
       width: 100%;
-      max-width: 400px;
+      max-width: 420px;
       text-align: center;
       box-shadow: 0 24px 80px rgba(0, 0, 0, 0.8), 0 0 40px rgba(255, 45, 85, 0.2);
       display: flex;
       flex-direction: column;
-      gap: 18px;
+      gap: 16px;
       animation: modalPop 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
     }
 
@@ -103,14 +103,17 @@
     }
 
     .auth-desc {
-      font-size: 0.88rem;
+      font-size: 0.85rem;
       color: var(--text-muted);
       margin-top: -6px;
+      line-height: 1.4;
     }
 
-    .auth-input-group {
-      position: relative;
-      width: 100%;
+    .auth-form {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-top: 6px;
     }
 
     .auth-input {
@@ -118,19 +121,17 @@
       background: rgba(0, 0, 0, 0.5);
       border: 1px solid rgba(255, 255, 255, 0.15);
       border-radius: 14px;
-      padding: 14px 18px;
+      padding: 13px 16px;
       color: #fff;
-      font-size: 1rem;
-      font-family: var(--mono);
-      letter-spacing: 0.15em;
-      text-align: center;
+      font-size: 0.95rem;
+      font-family: inherit;
       outline: none;
       transition: all 0.25s ease;
     }
 
     .auth-input:focus {
       border-color: var(--accent-pink);
-      box-shadow: 0 0 20px rgba(255, 45, 85, 0.35);
+      box-shadow: 0 0 15px rgba(255, 45, 85, 0.35);
       background: rgba(0, 0, 0, 0.7);
     }
 
@@ -142,11 +143,12 @@
       border-radius: 14px;
       padding: 14px;
       font-weight: 700;
-      font-size: 1rem;
+      font-size: 0.95rem;
       cursor: pointer;
       font-family: inherit;
       box-shadow: 0 6px 20px rgba(255, 45, 85, 0.4);
       transition: all 0.2s ease;
+      margin-top: 4px;
     }
 
     .auth-btn:hover {
@@ -156,9 +158,10 @@
 
     .auth-error {
       color: #ef4444;
-      font-size: 0.85rem;
+      font-size: 0.82rem;
       font-weight: 600;
       display: none;
+      line-height: 1.4;
     }
 
     /* ── Main Dashboard Container ── */
@@ -166,7 +169,7 @@
       width: 100%;
       max-width: 1100px;
       margin: 0 auto;
-      display: none; /* Hidden until unlocked */
+      display: none; /* Hidden until Firebase Auth success */
       flex-direction: column;
       gap: 24px;
     }
@@ -216,6 +219,15 @@
       gap: 10px;
     }
 
+    .user-pill {
+      font-size: 0.82rem;
+      padding: 6px 12px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+    }
+
     .btn {
       display: inline-flex;
       align-items: center;
@@ -235,9 +247,7 @@
       color: var(--text);
       border-color: var(--border);
     }
-    .btn-refresh:hover {
-      background: rgba(255, 255, 255, 0.12);
-    }
+    .btn-refresh:hover { background: rgba(255, 255, 255, 0.12); }
 
     .btn-clear {
       background: rgba(239, 68, 68, 0.12);
@@ -383,13 +393,8 @@
       vertical-align: middle;
     }
 
-    tr:last-child td {
-      border-bottom: none;
-    }
-
-    tr:hover td {
-      background: rgba(255, 255, 255, 0.02);
-    }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: rgba(255, 255, 255, 0.02); }
 
     /* Visitor ID Badge */
     .vis-id {
@@ -464,27 +469,35 @@
 </head>
 <body>
 
-  <!-- Password Security Modal -->
+  <!-- Firebase Auth Login Modal -->
   <div id="authModal">
     <div class="auth-card">
-      <div class="auth-icon">🔒</div>
-      <div class="auth-title">Admin Access</div>
-      <div class="auth-desc">Enter admin passcode to view visitor logs</div>
+      <div class="auth-icon">🛡️</div>
+      <div class="auth-title">Admin Secure Login</div>
+      <div class="auth-desc">Authenticated directly via Firebase Auth</div>
       
-      <div class="auth-input-group">
+      <form class="auth-form" onsubmit="event.preventDefault(); handleLogin();">
+        <input 
+          type="email" 
+          id="emailInput" 
+          class="auth-input" 
+          placeholder="admin@email.com" 
+          autocomplete="email" 
+          required 
+          autofocus
+        />
         <input 
           type="password" 
           id="passInput" 
           class="auth-input" 
-          placeholder="••••••••" 
-          autocomplete="off" 
-          maxlength="30"
-          autofocus
+          placeholder="Password" 
+          autocomplete="current-password" 
+          required 
         />
-      </div>
+        <button type="submit" class="auth-btn" id="loginBtn">Secure Sign In 🔐</button>
+      </form>
       
-      <button class="auth-btn" onclick="checkPassword()">Unlock Dashboard 🔓</button>
-      <div class="auth-error" id="authError">Incorrect passcode. Try again!</div>
+      <div class="auth-error" id="authError"></div>
     </div>
   </div>
 
@@ -497,14 +510,15 @@
         <div class="brand-title">InstaGram <span>Admin</span></div>
       </div>
       <div class="actions-group">
+        <span class="user-pill" id="userEmailBadge">admin</span>
         <button class="btn btn-refresh" onclick="loadData()">
           <span>🔄</span> Refresh
         </button>
         <button class="btn btn-clear" onclick="clearAllData()">
           <span>🗑️</span> Clear All
         </button>
-        <button class="btn btn-logout" onclick="logoutAdmin()">
-          <span>🔒</span> Lock
+        <button class="btn btn-logout" onclick="handleLogout()">
+          <span>🚪</span> Logout
         </button>
       </div>
     </div>
@@ -542,7 +556,7 @@
         <span>Visitor Activity Log</span>
         <div class="status-badge" id="sourceBadge">
           <div class="pulse-dot"></div>
-          <span id="sourceText">Live Sync</span>
+          <span id="sourceText">Live Firestore</span>
         </div>
       </div>
 
@@ -571,52 +585,58 @@
 
   <script>
     // ==========================================
-    // PASSWORD SECURITY SYSTEM
+    // 1. FIREBASE AUTHENTICATION (ZERO SECRETS IN CODE)
     // ==========================================
-    // Default passcode is: admin123 (Change anytime below or in session)
-    const ADMIN_PASS = "admin123";
+    const authModal = document.getElementById('authModal');
+    const adminContainer = document.getElementById('adminContainer');
+    const authError = document.getElementById('authError');
+    const loginBtn = document.getElementById('loginBtn');
+    const userEmailBadge = document.getElementById('userEmailBadge');
 
-    function checkPassword() {
-      const input = document.getElementById('passInput');
-      const err = document.getElementById('authError');
-      const entered = input.value.trim();
+    // Listen to Firebase Auth state
+    if (typeof firebase !== 'undefined' && firebase.auth) {
+      firebase.auth().onAuthStateChanged((user) => {
+        if (user) {
+          // Logged in successfully
+          authModal.style.display = 'none';
+          adminContainer.style.display = 'flex';
+          userEmailBadge.innerText = user.email;
+          loadData();
+        } else {
+          // Logged out
+          authModal.style.display = 'flex';
+          adminContainer.style.display = 'none';
+        }
+      });
+    }
 
-      if (entered === ADMIN_PASS) {
-        sessionStorage.setItem('insta_admin_auth', 'true');
-        unlockUI();
-      } else {
-        err.style.display = 'block';
-        input.value = '';
-        input.focus();
+    async function handleLogin() {
+      const email = document.getElementById('emailInput').value.trim();
+      const password = document.getElementById('passInput').value;
+      authError.style.display = 'none';
+      loginBtn.disabled = true;
+      loginBtn.innerText = 'Verifying...';
+
+      try {
+        await firebase.auth().signInWithEmailAndPassword(email, password);
+      } catch (err) {
+        authError.innerText = err.message || "Invalid email or password!";
+        authError.style.display = 'block';
+      } finally {
+        loginBtn.disabled = false;
+        loginBtn.innerText = 'Secure Sign In 🔐';
       }
     }
 
-    function unlockUI() {
-      document.getElementById('authModal').style.display = 'none';
-      document.getElementById('adminContainer').style.display = 'flex';
-      loadData();
-    }
-
-    function logoutAdmin() {
-      sessionStorage.removeItem('insta_admin_auth');
+    async function handleLogout() {
+      if (firebase && firebase.auth) {
+        await firebase.auth().signOut();
+      }
       location.reload();
     }
 
-    // Check if already authenticated in this session
-    window.addEventListener('DOMContentLoaded', () => {
-      if (sessionStorage.getItem('insta_admin_auth') === 'true') {
-        unlockUI();
-      } else {
-        document.getElementById('passInput').focus();
-      }
-    });
-
-    document.getElementById('passInput').addEventListener('keypress', (e) => {
-      if (e.key === 'Enter') checkPassword();
-    });
-
     // ==========================================
-    // DATA RENDERING & FIREBASE LOGIC
+    // 2. DATA RENDERING & FIRESTORE LOGIC
     // ==========================================
     function formatTime(isoOrTimestamp) {
       if (!isoOrTimestamp) return 'Just now';
@@ -705,7 +725,6 @@
 
     function loadData() {
       if (typeof db !== 'undefined' && db !== null) {
-        document.getElementById('sourceText').innerText = 'Firestore Live';
         db.collection('visitors').onSnapshot((snapshot) => {
           const list = [];
           snapshot.forEach((doc) => {
@@ -713,29 +732,15 @@
           });
           renderVisitorList(list);
         }, (error) => {
-          console.warn("Firestore error, falling back to LocalStorage:", error);
-          loadLocalStorageData();
+          console.warn("Firestore error:", error);
         });
-      } else {
-        loadLocalStorageData();
       }
-    }
-
-    function loadLocalStorageData() {
-      document.getElementById('sourceText').innerText = 'LocalStorage Mode';
-      const raw = localStorage.getItem('insta_all_visitors');
-      const obj = raw ? JSON.parse(raw) : {};
-      const list = Object.values(obj);
-      renderVisitorList(list);
     }
 
     async function clearAllData() {
       if (!confirm("Are you sure you want to clear all visitor data and responses?")) {
         return;
       }
-
-      localStorage.removeItem('insta_all_visitors');
-      localStorage.removeItem('insta_visitor_name');
 
       if (typeof db !== 'undefined' && db !== null) {
         try {
@@ -745,7 +750,6 @@
             batch.delete(doc.ref);
           });
           await batch.commit();
-          console.log("Firestore visitors cleared!");
         } catch (e) {
           console.error("Error clearing firestore:", e);
         }
