@@ -6,7 +6,7 @@
   <title>InstaGram</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet" />
 
   <!-- Firebase App & Firestore SDKs -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -21,7 +21,7 @@
     }
 
     :root {
-      --bg-dark: #08080d;
+      --bg-dark: #000000;
       --card-bg: rgba(18, 18, 28, 0.7);
       --accent-pink: #ff2d55;
       --accent-purple: #8b5cf6;
@@ -30,7 +30,7 @@
     }
 
     body {
-      background: radial-gradient(circle at 50% 15%, #181329 0%, var(--bg-dark) 100%);
+      background-color: var(--bg-dark);
       font-family: var(--font-main);
       color: #fff;
       min-height: 100vh;
@@ -44,28 +44,65 @@
       padding: 20px 16px;
     }
 
-    /* Ambient Background Glow */
-    body::before {
-      content: '';
+    /* ── 1. Pure Black Fullscreen "Trust Me" Screen ── */
+    #trustScreen {
       position: fixed;
-      width: 600px;
-      height: 600px;
-      background: radial-gradient(circle, rgba(255, 45, 85, 0.25) 0%, rgba(139, 92, 246, 0.15) 50%, transparent 75%);
-      filter: blur(90px);
-      top: 45%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      z-index: 0;
+      inset: 0;
+      background: #000000;
+      z-index: 999;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+      transition: opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.5s ease;
+    }
+
+    #trustScreen.fade-out {
+      opacity: 0;
+      visibility: hidden;
       pointer-events: none;
-      animation: pulseGlow 7s ease-in-out infinite alternate;
+    }
+
+    .trust-btn {
+      position: relative;
+      cursor: pointer;
+      background: linear-gradient(135deg, #ff2d55 0%, #8b5cf6 100%);
+      color: #ffffff;
+      font-family: var(--font-main);
+      font-size: clamp(1.2rem, 4vw, 1.6rem);
+      font-weight: 800;
+      letter-spacing: 0.04em;
+      padding: 16px 42px;
+      border-radius: 999px;
+      border: none;
+      outline: none;
+      box-shadow: 0 0 40px rgba(255, 45, 85, 0.5), 0 0 0 0 rgba(255, 45, 85, 0.4);
+      animation: pulseGlow 2s infinite ease-in-out;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .trust-btn:hover {
+      transform: scale(1.08);
+      box-shadow: 0 0 60px rgba(255, 45, 85, 0.8), 0 0 0 10px rgba(255, 45, 85, 0.2);
+      animation: none;
+    }
+
+    .trust-btn:active {
+      transform: scale(0.96);
     }
 
     @keyframes pulseGlow {
-      0% { opacity: 0.5; transform: translate(-50%, -50%) scale(0.9); }
-      100% { opacity: 0.9; transform: translate(-50%, -50%) scale(1.15); }
+      0% { box-shadow: 0 0 25px rgba(255, 45, 85, 0.5), 0 0 0 0 rgba(255, 45, 85, 0.4); }
+      70% { box-shadow: 0 0 45px rgba(255, 45, 85, 0.8), 0 0 0 18px rgba(255, 45, 85, 0); }
+      100% { box-shadow: 0 0 25px rgba(255, 45, 85, 0.5), 0 0 0 0 rgba(255, 45, 85, 0); }
     }
 
-    /* Main Container */
+    /* ── 2. Main Content Wrapper ── */
     .main-wrapper {
       position: relative;
       z-index: 1;
@@ -75,6 +112,14 @@
       flex-direction: column;
       align-items: center;
       gap: 20px;
+      opacity: 0;
+      transform: scale(0.95);
+      transition: opacity 0.5s ease, transform 0.5s ease;
+    }
+
+    .main-wrapper.show {
+      opacity: 1;
+      transform: scale(1);
     }
 
     /* Video Frame Card */
@@ -86,8 +131,8 @@
       border-radius: 28px;
       border: 1px solid var(--border-color);
       box-shadow: 
-        0 24px 70px rgba(0, 0, 0, 0.75),
-        0 0 45px rgba(255, 45, 85, 0.15);
+        0 24px 70px rgba(0, 0, 0, 0.85),
+        0 0 45px rgba(255, 45, 85, 0.2);
       padding: 10px;
       position: relative;
     }
@@ -279,11 +324,18 @@
 </head>
 <body>
 
-  <div class="main-wrapper">
+  <!-- Pure Black Trust Me Screen -->
+  <div id="trustScreen">
+    <button class="trust-btn" onclick="startVideoNow()">
+      <span>Trust me</span> 🤫
+    </button>
+  </div>
+
+  <div class="main-wrapper" id="mainWrapper">
     <!-- Video Card -->
     <div class="video-card">
       <div class="video-inner" onclick="togglePlayPause()">
-        <video id="mainVid" autoplay loop playsinline>
+        <video id="mainVid" loop playsinline>
           <source src="assets/videos/vid.mp4" type="video/mp4" />
           Your browser does not support video.
         </video>
@@ -330,6 +382,8 @@
 
   <script>
     const vid = document.getElementById('mainVid');
+    const trustScreen = document.getElementById('trustScreen');
+    const mainWrapper = document.getElementById('mainWrapper');
     const ctrlBtn = document.getElementById('ctrlBtn');
     const btnPlayIcon = document.getElementById('btnPlayIcon');
     const btnPauseIcon = document.getElementById('btnPauseIcon');
@@ -339,42 +393,16 @@
     const playPath = 'M8 5v14l11-7z';
     const pausePath = 'M6 19h4V5H6v14zm8-14v14h4V5h-4z';
 
-    // 1. Direct Unmuted Audio Play on Load
-    vid.muted = false;
-    vid.volume = 1.0;
-
-    function playDirect() {
+    // 1. Trust Me Button Action -> 100% Full Audio Play
+    function startVideoNow() {
       vid.muted = false;
-      const playPromise = vid.play();
-      if (playPromise !== undefined) {
-        playPromise.then(() => {
-          updateButtonState(true);
-        }).catch(err => {
-          // If browser policy blocks sound before any interaction, play muted and immediately unmute on first gesture anywhere
-          console.warn("Direct sound autoplay blocked by browser policy; auto-unmuting on first touch.", err);
-          vid.muted = true;
-          vid.play();
-          updateButtonState(true);
+      vid.volume = 1.0;
+      vid.play();
 
-          const autoUnmute = () => {
-            vid.muted = false;
-            vid.volume = 1.0;
-            vid.play();
-            window.removeEventListener('click', autoUnmute);
-            window.removeEventListener('touchstart', autoUnmute);
-            window.removeEventListener('scroll', autoUnmute);
-            window.removeEventListener('keydown', autoUnmute);
-          };
-
-          window.addEventListener('click', autoUnmute, { once: true });
-          window.addEventListener('touchstart', autoUnmute, { once: true });
-          window.addEventListener('scroll', autoUnmute, { once: true });
-          window.addEventListener('keydown', autoUnmute, { once: true });
-        });
-      }
+      trustScreen.classList.add('fade-out');
+      mainWrapper.classList.add('show');
+      updateButtonState(true);
     }
-
-    playDirect();
 
     // Toggle Play / Pause
     function togglePlayPause() {
