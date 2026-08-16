@@ -1,0 +1,572 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>InstaGram - Admin Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet" />
+
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="firebase-config.js"></script>
+
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --bg: #09090e;
+      --card-bg: rgba(18, 18, 28, 0.85);
+      --border: rgba(255, 255, 255, 0.08);
+      --accent-pink: #ff2d55;
+      --accent-cyan: #06b6d4;
+      --accent-green: #10b981;
+      --accent-orange: #f59e0b;
+      --text: #f1f5f9;
+      --text-muted: #94a3b8;
+      --font: 'Plus Jakarta Sans', sans-serif;
+      --mono: 'JetBrains Mono', monospace;
+    }
+
+    body {
+      background-color: var(--bg);
+      background-image: 
+        radial-gradient(circle at 10% 20%, rgba(255, 45, 85, 0.06) 0%, transparent 40%),
+        radial-gradient(circle at 90% 80%, rgba(6, 182, 212, 0.05) 0%, transparent 40%);
+      color: var(--text);
+      font-family: var(--font);
+      min-height: 100vh;
+      padding: 30px 20px;
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    /* Header */
+    .header-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, var(--accent-pink), #8b5cf6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.4rem;
+      box-shadow: 0 4px 15px rgba(255, 45, 85, 0.35);
+    }
+
+    .brand-title {
+      font-size: 1.5rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+
+    .brand-title span {
+      background: linear-gradient(135deg, var(--accent-pink), #ec4899);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .actions-group {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 18px;
+      border-radius: 12px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: all 0.2s ease;
+      font-family: inherit;
+    }
+
+    .btn-refresh {
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--text);
+      border-color: var(--border);
+    }
+    .btn-refresh:hover {
+      background: rgba(255, 255, 255, 0.12);
+    }
+
+    .btn-clear {
+      background: rgba(239, 68, 68, 0.12);
+      color: #f87171;
+      border-color: rgba(239, 68, 68, 0.25);
+    }
+    .btn-clear:hover {
+      background: #ef4444;
+      color: #fff;
+      box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);
+    }
+
+    /* Stats Grid */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+    }
+
+    .stat-card {
+      background: var(--card-bg);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 20px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    }
+
+    .stat-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+    }
+
+    .stat-icon.visitors { background: rgba(255, 45, 85, 0.15); color: var(--accent-pink); }
+    .stat-icon.views { background: rgba(6, 182, 212, 0.15); color: var(--accent-cyan); }
+    .stat-icon.names { background: rgba(16, 185, 129, 0.15); color: var(--accent-green); }
+
+    .stat-info {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .stat-label {
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .stat-value {
+      font-size: 1.8rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+
+    /* Table Card */
+    .table-card {
+      background: var(--card-bg);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 20px;
+      box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
+      overflow: hidden;
+    }
+
+    .table-header-title {
+      font-size: 1.15rem;
+      font-weight: 700;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .status-badge {
+      font-size: 0.78rem;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: rgba(16, 185, 129, 0.15);
+      color: #34d399;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .pulse-dot {
+      width: 7px;
+      height: 7px;
+      background: #10b981;
+      border-radius: 50%;
+      box-shadow: 0 0 8px #10b981;
+    }
+
+    .table-responsive {
+      overflow-x: auto;
+      border-radius: 14px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 0.92rem;
+    }
+
+    th {
+      background: rgba(255, 255, 255, 0.03);
+      padding: 14px 18px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--border);
+    }
+
+    td {
+      padding: 16px 18px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+      vertical-align: middle;
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    tr:hover td {
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    /* Visitor ID Badge */
+    .vis-id {
+      font-family: var(--mono);
+      font-size: 0.85rem;
+      font-weight: 700;
+      padding: 6px 12px;
+      border-radius: 8px;
+      display: inline-block;
+      letter-spacing: 0.02em;
+    }
+
+    /* Dynamic Colors for IDs */
+    .vis-c0 { background: rgba(255, 45, 85, 0.15); color: #ff6b8b; border: 1px solid rgba(255, 45, 85, 0.3); }
+    .vis-c1 { background: rgba(6, 182, 212, 0.15); color: #38bdf8; border: 1px solid rgba(6, 182, 212, 0.3); }
+    .vis-c2 { background: rgba(139, 92, 246, 0.15); color: #a78bfa; border: 1px solid rgba(139, 92, 246, 0.3); }
+    .vis-c3 { background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); }
+    .vis-c4 { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); }
+
+    /* Device Badge */
+    .device-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 12px;
+      border-radius: 999px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    /* Visits Badge */
+    .visit-count-pill {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 32px;
+      height: 28px;
+      padding: 0 10px;
+      border-radius: 14px;
+      background: rgba(255, 45, 85, 0.2);
+      color: #ff4d6d;
+      font-weight: 700;
+      font-size: 0.88rem;
+    }
+
+    .name-cell {
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .name-empty {
+      color: var(--text-muted);
+      font-style: italic;
+      font-weight: 400;
+    }
+
+    .time-cell {
+      color: var(--text-muted);
+      font-size: 0.85rem;
+    }
+
+    /* Empty State */
+    .empty-state {
+      padding: 60px 20px;
+      text-align: center;
+      color: var(--text-muted);
+    }
+
+    .empty-icon {
+      font-size: 3rem;
+      margin-bottom: 12px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <!-- Header -->
+    <div class="header-bar">
+      <div class="brand">
+        <div class="brand-icon">📊</div>
+        <div class="brand-title">InstaGram <span>Admin</span></div>
+      </div>
+      <div class="actions-group">
+        <button class="btn btn-refresh" onclick="loadData()">
+          <span>🔄</span> Refresh
+        </button>
+        <button class="btn btn-clear" onclick="clearAllData()">
+          <span>🗑️</span> Clear All
+        </button>
+      </div>
+    </div>
+
+    <!-- Stats Top Cards -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-icon visitors">👥</div>
+        <div class="stat-info">
+          <span class="stat-label">Unique Visitors</span>
+          <span class="stat-value" id="statUniqueVisitors">0</span>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon views">🔥</div>
+        <div class="stat-info">
+          <span class="stat-label">Total Visits</span>
+          <span class="stat-value" id="statTotalVisits">0</span>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon names">✨</div>
+        <div class="stat-info">
+          <span class="stat-label">Names Submitted</span>
+          <span class="stat-value" id="statNamedVisitors">0</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Clean Single View Table -->
+    <div class="table-card">
+      <div class="table-header-title">
+        <span>Visitor Activity Log</span>
+        <div class="status-badge" id="sourceBadge">
+          <div class="pulse-dot"></div>
+          <span id="sourceText">Live Sync</span>
+        </div>
+      </div>
+
+      <div class="table-responsive">
+        <table>
+          <thead>
+            <tr>
+              <th>Visitor ID</th>
+              <th>Name</th>
+              <th>Device</th>
+              <th>Visits</th>
+              <th>Last Active</th>
+            </tr>
+          </thead>
+          <tbody id="visitorTableBody">
+            <!-- Dynamic rows injected here -->
+          </tbody>
+        </table>
+      </div>
+      <div class="empty-state" id="emptyState" style="display: none;">
+        <div class="empty-icon">📭</div>
+        <p>No visitors recorded yet. Open <a href="index.html" style="color:var(--accent-pink); text-decoration:none; font-weight:600;">index.html</a> to track visits!</p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Format timestamp nicely
+    function formatTime(isoOrTimestamp) {
+      if (!isoOrTimestamp) return 'Just now';
+      let d;
+      if (isoOrTimestamp.toDate) {
+        d = isoOrTimestamp.toDate();
+      } else {
+        d = new Date(isoOrTimestamp);
+      }
+      return d.toLocaleDateString() + ' ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    }
+
+    // Color picker for Visitor ID
+    function getVisitorColorClass(idStr) {
+      let hash = 0;
+      for (let i = 0; i < idStr.length; i++) {
+        hash = idStr.charCodeAt(i) + ((hash << 5) - hash);
+      }
+      const idx = Math.abs(hash) % 5;
+      return `vis-c${idx}`;
+    }
+
+    // Device icon mapper
+    function getDeviceBadge(device) {
+      if (!device) return '<span class="device-badge">💻 Unknown</span>';
+      const d = device.toLowerCase();
+      if (d.includes('iphone') || d.includes('ios')) return '<span class="device-badge">🍎 iPhone</span>';
+      if (d.includes('android')) return '<span class="device-badge">📱 Android</span>';
+      if (d.includes('windows')) return '<span class="device-badge">🖥️ Windows</span>';
+      if (d.includes('mac')) return '<span class="device-badge">💻 Mac</span>';
+      return `<span class="device-badge">🖥️ ${device}</span>`;
+    }
+
+    // Render table rows & stats
+    function renderVisitorList(list) {
+      const tbody = document.getElementById('visitorTableBody');
+      const empty = document.getElementById('emptyState');
+
+      tbody.innerHTML = '';
+
+      if (!list || list.length === 0) {
+        empty.style.display = 'block';
+        document.getElementById('statUniqueVisitors').innerText = '0';
+        document.getElementById('statTotalVisits').innerText = '0';
+        document.getElementById('statNamedVisitors').innerText = '0';
+        return;
+      }
+
+      empty.style.display = 'none';
+
+      // Calculate stats
+      const uniqueCount = list.length;
+      let totalVisits = 0;
+      let namesCount = 0;
+
+      // Sort by last active descending
+      list.sort((a, b) => {
+        const timeA = a.lastVisit?.seconds ? a.lastVisit.seconds * 1000 : new Date(a.lastVisit || 0).getTime();
+        const timeB = b.lastVisit?.seconds ? b.lastVisit.seconds * 1000 : new Date(b.lastVisit || 0).getTime();
+        return timeB - timeA;
+      });
+
+      list.forEach(item => {
+        totalVisits += (item.visitCount || 1);
+        if (item.name && item.name.trim() !== '') namesCount++;
+
+        const colorClass = getVisitorColorClass(item.visitorId || 'VIS_000');
+        const deviceHtml = getDeviceBadge(item.device);
+        const nameHtml = item.name ? `<span class="name-cell">${escapeHtml(item.name)}</span>` : `<span class="name-empty">Anonymous</span>`;
+        const timeFormatted = formatTime(item.lastVisit);
+
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td><span class="vis-id ${colorClass}">${item.visitorId}</span></td>
+          <td>${nameHtml}</td>
+          <td>${deviceHtml}</td>
+          <td><span class="visit-count-pill">${item.visitCount || 1}</span></td>
+          <td class="time-cell">${timeFormatted}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      document.getElementById('statUniqueVisitors').innerText = uniqueCount;
+      document.getElementById('statTotalVisits').innerText = totalVisits;
+      document.getElementById('statNamedVisitors').innerText = namesCount;
+    }
+
+    function escapeHtml(str) {
+      return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    }
+
+    // Load Data (Firebase real-time listener if configured, otherwise localstorage)
+    function loadData() {
+      if (typeof db !== 'undefined' && db !== null) {
+        document.getElementById('sourceText').innerText = 'Firestore Live';
+        db.collection('visitors').onSnapshot((snapshot) => {
+          const list = [];
+          snapshot.forEach((doc) => {
+            list.push({ id: doc.id, ...doc.data() });
+          });
+          renderVisitorList(list);
+        }, (error) => {
+          console.warn("Firestore error, falling back to LocalStorage:", error);
+          loadLocalStorageData();
+        });
+      } else {
+        loadLocalStorageData();
+      }
+    }
+
+    function loadLocalStorageData() {
+      document.getElementById('sourceText').innerText = 'LocalStorage Mode';
+      const raw = localStorage.getItem('insta_all_visitors');
+      const obj = raw ? JSON.parse(raw) : {};
+      const list = Object.values(obj);
+      renderVisitorList(list);
+    }
+
+    // Clear All Function
+    async function clearAllData() {
+      if (!confirm("Are you sure you want to clear all visitor data and responses?")) {
+        return;
+      }
+
+      // Clear LocalStorage
+      localStorage.removeItem('insta_all_visitors');
+      localStorage.removeItem('insta_visitor_name');
+
+      // Clear Firestore Collection
+      if (typeof db !== 'undefined' && db !== null) {
+        try {
+          const snapshot = await db.collection('visitors').get();
+          const batch = db.batch();
+          snapshot.forEach((doc) => {
+            batch.delete(doc.ref);
+          });
+          await batch.commit();
+          console.log("Firestore visitors cleared!");
+        } catch (e) {
+          console.error("Error clearing firestore:", e);
+        }
+      }
+
+      renderVisitorList([]);
+      alert("All visitor tracking data cleared successfully!");
+    }
+
+    // Initial Load
+    window.addEventListener('DOMContentLoaded', loadData);
+  </script>
+</body>
+</html>

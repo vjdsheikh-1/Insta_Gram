@@ -1,0 +1,475 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>InstaGram</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+
+  <!-- Firebase App & Firestore SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="firebase-config.js"></script>
+
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --bg-dark: #08080d;
+      --card-bg: rgba(18, 18, 28, 0.7);
+      --accent-pink: #ff2d55;
+      --accent-purple: #8b5cf6;
+      --accent-cyan: #06b6d4;
+      --border-color: rgba(255, 255, 255, 0.1);
+      --font-main: 'Plus Jakarta Sans', sans-serif;
+    }
+
+    body {
+      background: radial-gradient(circle at 50% 15%, #181329 0%, var(--bg-dark) 100%);
+      font-family: var(--font-main);
+      color: #fff;
+      min-height: 100vh;
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      overflow-x: hidden;
+      position: relative;
+      padding: 20px 16px;
+    }
+
+    /* Ambient Background Glow */
+    body::before {
+      content: '';
+      position: fixed;
+      width: 600px;
+      height: 600px;
+      background: radial-gradient(circle, rgba(255, 45, 85, 0.25) 0%, rgba(139, 92, 246, 0.15) 50%, transparent 75%);
+      filter: blur(90px);
+      top: 45%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 0;
+      pointer-events: none;
+      animation: pulseGlow 7s ease-in-out infinite alternate;
+    }
+
+    @keyframes pulseGlow {
+      0% { opacity: 0.5; transform: translate(-50%, -50%) scale(0.9); }
+      100% { opacity: 0.9; transform: translate(-50%, -50%) scale(1.15); }
+    }
+
+    /* Main Container */
+    .main-wrapper {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      max-width: 680px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+    }
+
+    /* Video Frame Card */
+    .video-card {
+      width: 100%;
+      background: var(--card-bg);
+      backdrop-filter: blur(28px);
+      -webkit-backdrop-filter: blur(28px);
+      border-radius: 28px;
+      border: 1px solid var(--border-color);
+      box-shadow: 
+        0 24px 70px rgba(0, 0, 0, 0.75),
+        0 0 45px rgba(255, 45, 85, 0.15);
+      padding: 10px;
+      overflow: hidden;
+      transition: all 0.3s ease;
+    }
+
+    .video-card:hover {
+      box-shadow: 
+        0 30px 85px rgba(0, 0, 0, 0.85),
+        0 0 55px rgba(255, 45, 85, 0.25);
+    }
+
+    .video-inner {
+      position: relative;
+      width: 100%;
+      border-radius: 20px;
+      overflow: hidden;
+      background: #000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      aspect-ratio: 9 / 16;
+      max-height: 65vh;
+    }
+
+    video {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      display: block;
+      pointer-events: none;
+      user-select: none;
+    }
+
+    /* Interactive Name / Interaction Section */
+    .interaction-card {
+      width: 100%;
+      background: rgba(22, 22, 34, 0.65);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-radius: 22px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      padding: 20px 24px;
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      text-align: center;
+    }
+
+    .prompt-text {
+      font-size: 1.05rem;
+      font-weight: 600;
+      color: rgba(255, 255, 255, 0.92);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      letter-spacing: -0.01em;
+    }
+
+    .prompt-text .smile {
+      font-size: 1.4rem;
+      animation: bounceSmile 2s infinite ease-in-out;
+      display: inline-block;
+    }
+
+    @keyframes bounceSmile {
+      0%, 100% { transform: translateY(0) rotate(0deg); }
+      50% { transform: translateY(-4px) rotate(10deg); }
+    }
+
+    .input-form {
+      display: flex;
+      gap: 10px;
+      width: 100%;
+      max-width: 480px;
+      margin: 0 auto;
+    }
+
+    .name-input {
+      flex: 1;
+      background: rgba(0, 0, 0, 0.45);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 14px;
+      padding: 12px 18px;
+      color: #fff;
+      font-size: 0.95rem;
+      font-family: inherit;
+      outline: none;
+      transition: all 0.25s ease;
+    }
+
+    .name-input:focus {
+      border-color: var(--accent-pink);
+      background: rgba(0, 0, 0, 0.7);
+      box-shadow: 0 0 15px rgba(255, 45, 85, 0.35);
+    }
+
+    .name-input::placeholder {
+      color: rgba(255, 255, 255, 0.35);
+    }
+
+    .submit-btn {
+      background: linear-gradient(135deg, var(--accent-pink) 0%, #e0245e 100%);
+      color: #fff;
+      border: none;
+      border-radius: 14px;
+      padding: 12px 22px;
+      font-weight: 700;
+      font-size: 0.95rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: 0 4px 15px rgba(255, 45, 85, 0.4);
+      transition: all 0.25s ease;
+    }
+
+    .submit-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(255, 45, 85, 0.6);
+    }
+
+    .submit-btn:active {
+      transform: translateY(0);
+    }
+
+    /* Success message state */
+    .success-msg {
+      display: none;
+      font-size: 1rem;
+      font-weight: 600;
+      color: #10b981;
+      animation: fadeIn 0.4s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Floating Unmute Hint Banner for Autoplay Policy */
+    .audio-notice {
+      position: fixed;
+      top: 16px;
+      background: rgba(18, 18, 28, 0.85);
+      border: 1px solid rgba(255, 45, 85, 0.4);
+      backdrop-filter: blur(16px);
+      border-radius: 999px;
+      padding: 8px 18px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+      z-index: 99;
+      opacity: 0;
+      transform: translateY(-20px);
+      transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+      cursor: pointer;
+    }
+
+    .audio-notice.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Audio Prompt Bar (Appears only if Chrome blocks unmuted direct autoplay) -->
+  <div class="audio-notice" id="audioNotice" onclick="unmuteAudioDirect()">
+    <span>🔊</span> Tap anywhere to unmute audio!
+  </div>
+
+  <div class="main-wrapper">
+    <!-- Clean Video Card -->
+    <div class="video-card">
+      <div class="video-inner">
+        <video id="mainVid" autoplay loop playsinline>
+          <source src="assets/videos/vid.mp4" type="video/mp4" />
+          Your browser does not support video.
+        </video>
+      </div>
+    </div>
+
+    <!-- Name / Interaction Card -->
+    <div class="interaction-card">
+      <div class="prompt-text">
+        <span>If you wanna let me know your name??</span>
+        <span class="smile">😊</span>
+      </div>
+
+      <div class="input-form" id="inputGroup">
+        <input 
+          type="text" 
+          id="userNameInput" 
+          class="name-input" 
+          placeholder="Enter your name..." 
+          autocomplete="off" 
+          maxlength="50"
+        />
+        <button class="submit-btn" id="submitBtn" onclick="submitUserName()">
+          <span>Send</span> ✨
+        </button>
+      </div>
+
+      <div class="success-msg" id="successMsg">
+        Thanks for letting me know! ❤️
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ==========================================
+    // 1. DIRECT AUDIO AUTOPLAY ATTEMPT
+    // ==========================================
+    const vid = document.getElementById('mainVid');
+    const audioNotice = document.getElementById('audioNotice');
+
+    // Attempt unmuted autoplay directly
+    vid.muted = false;
+    vid.volume = 1.0;
+    
+    let playPromise = vid.play();
+    if (playPromise !== undefined) {
+      playPromise.then(() => {
+        // Direct unmuted audio autoplay succeeded!
+        console.log("Direct unmuted audio autoplay succeeded!");
+      }).catch(error => {
+        console.log("Browser policy blocked direct audio. Playing muted first & awaiting first touch.", error);
+        vid.muted = true;
+        vid.play();
+        audioNotice.classList.add('show');
+      });
+    }
+
+    function unmuteAudioDirect() {
+      vid.muted = false;
+      vid.volume = 1.0;
+      vid.play();
+      audioNotice.classList.remove('show');
+    }
+
+    // Auto-unmute on first user touch/click anywhere on page
+    window.addEventListener('click', function onFirstClick() {
+      unmuteAudioDirect();
+      window.removeEventListener('click', onFirstClick);
+    }, { once: true });
+    
+    window.addEventListener('touchstart', function onFirstTouch() {
+      unmuteAudioDirect();
+      window.removeEventListener('touchstart', onFirstTouch);
+    }, { once: true });
+
+    // ==========================================
+    // 2. VISITOR TRACKING & FIREBASE SYNC
+    // ==========================================
+    function getDeviceType() {
+      const ua = navigator.userAgent || navigator.vendor || window.opera;
+      if (/android/i.test(ua)) return 'Android';
+      if (/iPad|iPhone|iPod/.test(ua) && !window.MSStream) return 'iPhone';
+      if (/Macintosh|Mac OS X/i.test(ua)) return 'Mac';
+      if (/Windows/i.test(ua)) return 'Windows';
+      if (/Linux/i.test(ua)) return 'Linux';
+      return 'Desktop';
+    }
+
+    function generateVisitorId() {
+      const part1 = Math.random().toString(36).substring(2, 7).toUpperCase();
+      const part2 = Math.floor(1000 + Math.random() * 9000);
+      return `VIS_${part1}_${part2}`;
+    }
+
+    // Get or Create Persistent Visitor ID
+    let visitorId = localStorage.getItem('insta_visitor_id');
+    if (!visitorId) {
+      visitorId = generateVisitorId();
+      localStorage.setItem('insta_visitor_id', visitorId);
+    }
+
+    const device = getDeviceType();
+    const currentTimestamp = new Date().toISOString();
+
+    // Check if previously submitted name
+    const savedName = localStorage.getItem('insta_visitor_name');
+    if (savedName) {
+      document.getElementById('userNameInput').value = savedName;
+    }
+
+    // Local Storage Tracker (Offline fallback mode)
+    function trackLocally(name = '') {
+      let visitors = JSON.parse(localStorage.getItem('insta_all_visitors') || '{}');
+      if (!visitors[visitorId]) {
+        visitors[visitorId] = {
+          visitorId: visitorId,
+          device: device,
+          name: name || '',
+          visitCount: 1,
+          firstVisit: currentTimestamp,
+          lastVisit: currentTimestamp,
+          userAgent: navigator.userAgent
+        };
+      } else {
+        visitors[visitorId].visitCount = (visitors[visitorId].visitCount || 0) + 1;
+        visitors[visitorId].lastVisit = currentTimestamp;
+        visitors[visitorId].device = device;
+        if (name) visitors[visitorId].name = name;
+      }
+      localStorage.setItem('insta_all_visitors', JSON.stringify(visitors));
+    }
+
+    // Firebase Sync
+    async function syncToFirebase(name = '') {
+      trackLocally(name);
+
+      if (typeof db !== 'undefined' && db !== null) {
+        try {
+          const docRef = db.collection('visitors').doc(visitorId);
+          const docSnap = await docRef.get();
+
+          if (docSnap.exists) {
+            const data = docSnap.data();
+            await docRef.update({
+              visitCount: firebase.firestore.FieldValue.increment(1),
+              lastVisit: firebase.firestore.FieldValue.serverTimestamp(),
+              device: device,
+              ...(name ? { name: name } : {})
+            });
+          } else {
+            await docRef.set({
+              visitorId: visitorId,
+              device: device,
+              name: name || '',
+              visitCount: 1,
+              firstVisit: firebase.firestore.FieldValue.serverTimestamp(),
+              lastVisit: firebase.firestore.FieldValue.serverTimestamp(),
+              userAgent: navigator.userAgent
+            });
+          }
+          console.log("Visitor synced to Firestore!");
+        } catch (e) {
+          console.error("Firestore sync error:", e);
+        }
+      }
+    }
+
+    // Initial visit tracking
+    syncToFirebase();
+
+    // ==========================================
+    // 3. SUBMIT NAME FUNCTION
+    // ==========================================
+    async function submitUserName() {
+      const input = document.getElementById('userNameInput');
+      const name = input.value.trim();
+      if (!name) return;
+
+      localStorage.setItem('insta_visitor_name', name);
+      
+      const submitBtn = document.getElementById('submitBtn');
+      submitBtn.disabled = true;
+      submitBtn.innerText = 'Saving...';
+
+      // Update in LocalStorage & Firestore
+      await syncToFirebase(name);
+
+      document.getElementById('inputGroup').style.display = 'none';
+      const successMsg = document.getElementById('successMsg');
+      successMsg.innerText = `Thanks for letting me know, ${name}! ❤️`;
+      successMsg.style.display = 'block';
+    }
+
+    // Allow Enter key to submit
+    document.getElementById('userNameInput').addEventListener('keypress', function (e) {
+      if (e.key === 'Enter') {
+        submitUserName();
+      }
+    });
+  </script>
+</body>
+</html>
